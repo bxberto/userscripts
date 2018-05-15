@@ -1,0 +1,104 @@
+// ==UserScript==
+// @name         On'Yomi Puzzle
+// @namespace    http://tampermonkey.net/
+// @version      0.1
+// @description  try to take over the world!
+// @author       BxBerto
+// @match        https://www.wanikani.com/dashboard
+// @match        https://www.wanikani.com/
+// @grant        none
+// @resource
+// @resource
+//
+// @require http://code.jquery.com/jquery-latest.js
+// ==/UserScript==
+
+
+
+
+
+// =============================== FUNCTIONS ==================================== //
+(function() {
+    'use strict';
+
+    var ui;
+
+    function get_api_key() {
+        var done = $.Deferred();
+
+        // First check if the API key is in local storage.
+        var api_key = localStorage.getItem('apiKey');
+        if (api_key && api_key.length == 32) return done.resolve();
+
+        // We don't have the API key.  Fetch it from the /account page.
+        dlog(1,'wkdpp: Fetching api_key');
+        $.get('/settings/account')
+            .done(function(page){
+            // Make sure what we got is a web page.
+            if (typeof page !== 'string') {return done.reject();}
+
+            // Extract the API key.
+            api_key = $(page).find('#user_api_key').attr('value');
+            if (typeof api_key !== 'string' || api_key.length !== 32)  {return done.reject();}
+
+            // Store the updated user info.
+            localStorage.setItem('apiKey', api_key);
+
+            // Return success.
+            done.resolve();
+        })
+            .fail(function(){
+            // Failed to get web page.
+            done.reject();
+        });
+
+        return done.promise();
+    }
+
+$("#search").prepend("<div id='myDiv'></div>");
+
+$('#myDiv').append('<br><br><table id="puzzle_table" align="center"></table>');
+
+var table = $('#myDiv').children();
+table.append("<tr><td class='empty'></td><td class='kanji_box'>漢字</td><td class='empty'></td></tr><tr><td class='kanji_box'>漢字</td><td class='answer_box'></td><td class='kanji_box'>漢字</td></tr><tr><td class='empty'></td><td class='kanji_box'>漢字</td><td class='empty'></td></tr>");
+
+
+
+    //$("#search").css("height","250");
+    //$(".kanji_box").css("border", "5px solid black");
+    //$(".empty").css("color", "yellow");
+    //$(".empty").css("font-size", "30px");
+    //$("#puzzle_table").css("font-size", "35px");
+    //$("#puzzle_table").css("padding", "15px");
+    //$(".kanji_box").css("padding", "5px");
+    //$(".kanji_box").css("padding", "5px");
+    //$(".empty").css("padding", "5px");
+
+    function addGlobalStyle(css) {
+    var head, style;
+    head = document.getElementsByTagName('head')[0];
+    if (!head) { return; }
+    style = document.createElement('style');
+    style.type = 'text/css';
+    style.innerHTML = css;
+    head.appendChild(style);
+}
+
+    addGlobalStyle(
+        '.kanji_box { background-color: yellow !important; font-size: 30px !important; border: 3px solid black !important; padding: 20px !important;}'
+    );
+
+    addGlobalStyle(
+        '#myDiv { background-color: lightgrey !important; height: 300px !important;}'
+    );
+
+    addGlobalStyle(
+        '#puzzle_table { padding: 5px !important; border-collapse: separate !important; border-spacing: 3px !important;}'
+    );
+
+    addGlobalStyle(
+        '.answer_box { padding: 20px !important; background-color: yellow !important; font-size: 30px !important; border: 3px solid black !important;}'
+    );
+
+
+})();
